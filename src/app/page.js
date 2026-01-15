@@ -1,66 +1,110 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+import React, { useState, useEffect } from 'react';
+import Dashboard from '@/components/Dashboard';
+import ApplicationCard from '@/components/ApplicationCard';
+import ApplicationForm from '@/components/ApplicationForm';
 
 export default function Home() {
+  const [applications, setApplications] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingApp, setEditingApp] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('interview_apps');
+    if (saved) {
+      setApplications(JSON.parse(saved));
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('interview_apps', JSON.stringify(applications));
+    }
+  }, [applications, isLoaded]);
+
+  const handleAddOrEdit = (appData) => {
+    if (editingApp) {
+      setApplications(prev => prev.map(app => app.id === editingApp.id ? { ...appData, id: app.id } : app));
+    } else {
+      setApplications(prev => [...prev, { ...appData, id: Date.now().toString() }]);
+    }
+    setEditingApp(null);
+  };
+
+  const handleDelete = (id) => {
+    setApplications(prev => prev.filter(app => app.id !== id));
+  };
+
+  const handleEditClick = (app) => {
+    setEditingApp(app);
+    setIsModalOpen(true);
+  };
+
+  const handleStatusUpdate = (id) => {
+    const statuses = ['Applied', 'Interview', 'Offer', 'Rejected'];
+    setApplications(prev => prev.map(app => {
+      if (app.id === id) {
+        const nextIndex = (statuses.indexOf(app.status) + 1) % statuses.length;
+        return { ...app, status: statuses[nextIndex] };
+      }
+      return app;
+    }));
+  };
+
+  const filteredApps = applications
+    .filter(app => {
+      const matchesSearch = app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.role.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'All' || app.status === filterStatus;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (!isLoaded) return null;
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="app-container">
+      <Dashboard
+        applications={applications}
+        onAddClick={() => { setEditingApp(null); setIsModalOpen(true); }}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+      />
+
+      <div className="application-list">
+        {filteredApps.length > 0 ? (
+          filteredApps.map(app => (
+            <ApplicationCard
+              key={app.id}
+              application={app}
+              onEdit={handleEditClick}
+              onDelete={handleDelete}
+              onStatusUpdate={handleStatusUpdate}
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          ))
+        ) : (
+          <div className="glass-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '1.1rem' }}>No applications found. Start by adding your first one!</p>
+          </div>
+        )}
+      </div>
+
+      <ApplicationForm
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingApp(null); }}
+        onSubmit={handleAddOrEdit}
+        initialData={editingApp}
+      />
+
+      <footer style={{ marginTop: '4rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.875rem', borderTop: '1px solid var(--card-border)' }}>
+        <p>&copy; {new Date().getFullYear()} Interview Tracker. Built for career success.</p>
+      </footer>
     </div>
   );
 }
