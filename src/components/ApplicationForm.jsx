@@ -10,7 +10,10 @@ const ApplicationForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
         date: new Date().toISOString().split('T')[0],
         salary: '',
         notes: '',
-        link: ''
+        link: '',
+        platform: '',
+        location: '',
+        workMode: 'On-site'
     });
 
     useEffect(() => {
@@ -24,7 +27,10 @@ const ApplicationForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                 date: new Date().toISOString().split('T')[0],
                 salary: '',
                 notes: '',
-                link: ''
+                link: '',
+                platform: '',
+                location: '',
+                workMode: 'On-site'
             });
         }
     }, [initialData, isOpen]);
@@ -126,6 +132,36 @@ const ApplicationForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                                 style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
                                 placeholder="https://..."
                             />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Platform (Optional)</label>
+                            <input
+                                type="text" name="platform" value={formData.platform} onChange={handleChange}
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                placeholder="e.g. LinkedIn, Indeed"
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Location (Optional)</label>
+                            <input
+                                type="text" name="location" value={formData.location} onChange={handleChange}
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                placeholder="e.g. New York, NY"
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Work Mode</label>
+                            <select
+                                name="workMode" value={formData.workMode} onChange={handleChange}
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                            >
+                                <option value="On-site">On-site</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
                         </div>
 
                         <div style={{ gridColumn: 'span 2' }}>

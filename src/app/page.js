@@ -1,42 +1,133 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Dashboard from '@/components/Dashboard';
 import ApplicationCard from '@/components/ApplicationCard';
 import ApplicationForm from '@/components/ApplicationForm';
 
 export default function Home() {
   const [applications, setApplications] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, current: 1 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingApp, setEditingApp] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term
   useEffect(() => {
-    const saved = localStorage.getItem('interview_apps');
-    if (saved) {
-      setApplications(JSON.parse(saved));
-    }
-    setIsLoaded(true);
-  }, []);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPagination(p => ({ ...p, current: 1 })); // Reset to page 1 on new search
+    }, 500); // 500ms debounce
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  // Fetch applications
+  const fetchApplications = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: pagination.current,
+        limit: 10,
+        search: debouncedSearchTerm,
+        status: filterStatus,
+      });
+
+      const res = await fetch(`/api/applications?${params.toString()}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        setApplications(data.applications);
+        setPagination(data.pagination);
+      } else {
+        console.error('Failed to fetch applications:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pagination.current, debouncedSearchTerm, filterStatus]);
+
+  // Initial fetch and fetch on dependencies change
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('interview_apps', JSON.stringify(applications));
-    }
-  }, [applications, isLoaded]);
+    fetchApplications();
+  }, [fetchApplications]);
 
-  const handleAddOrEdit = (appData) => {
-    if (editingApp) {
-      setApplications(prev => prev.map(app => app.id === editingApp.id ? { ...appData, id: app.id } : app));
-    } else {
-      setApplications(prev => [...prev, { ...appData, id: Date.now().toString() }]);
+  // Create or Update
+  const handleAddOrEdit = async (appData) => {
+    try {
+      const method = editingApp ? 'PUT' : 'POST';
+      const url = editingApp
+        ? `/api/applications/${editingApp._id}`
+        : '/api/applications';
+
+      // Remove _id from body if it exists for PUT (Mongoose handles it) 
+      // or if it's new (Mongo generates it)
+      const { _id, createdAt, updatedAt, ...body } = appData;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        await fetchApplications(); // Refresh list
+        setEditingApp(null);
+        setIsModalOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving application:', error);
     }
-    setEditingApp(null);
   };
 
-  const handleDelete = (id) => {
-    setApplications(prev => prev.filter(app => app.id !== id));
+  // Delete
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this application?')) return;
+
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        await fetchApplications();
+      } else {
+        console.error('Failed to delete application');
+      }
+    } catch (error) {
+      console.error('Error deleting application:', error);
+    }
+  };
+
+  // Status Update
+  const handleStatusUpdate = async (id, currentStatus) => {
+    const statuses = ['Applied', 'Interview', 'Offer', 'Rejected'];
+    const nextIndex = (statuses.indexOf(currentStatus) + 1) % statuses.length;
+    const nextStatus = statuses[nextIndex];
+
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      if (res.ok) {
+        await fetchApplications();
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const handleEditClick = (app) => {
@@ -44,27 +135,9 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  const handleStatusUpdate = (id) => {
-    const statuses = ['Applied', 'Interview', 'Offer', 'Rejected'];
-    setApplications(prev => prev.map(app => {
-      if (app.id === id) {
-        const nextIndex = (statuses.indexOf(app.status) + 1) % statuses.length;
-        return { ...app, status: statuses[nextIndex] };
-      }
-      return app;
-    }));
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, current: newPage }));
   };
-
-  const filteredApps = applications
-    .filter(app => {
-      const matchesSearch = app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.role.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterStatus === 'All' || app.status === filterStatus;
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  if (!isLoaded) return null;
 
   return (
     <div className="app-container">
@@ -74,18 +147,22 @@ export default function Home() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
+        setFilterStatus={(status) => { setFilterStatus(status); setPagination(p => ({ ...p, current: 1 })); }}
+        pagination={pagination}
+        onPageChange={handlePageChange}
       />
 
       <div className="application-list">
-        {filteredApps.length > 0 ? (
-          filteredApps.map(app => (
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading...</div>
+        ) : applications.length > 0 ? (
+          applications.map(app => (
             <ApplicationCard
-              key={app.id}
-              application={app}
+              key={app._id}
+              application={app} // Pass the whole object, assuming _id is used
               onEdit={handleEditClick}
-              onDelete={handleDelete}
-              onStatusUpdate={handleStatusUpdate}
+              onDelete={() => handleDelete(app._id)}
+              onStatusUpdate={() => handleStatusUpdate(app._id, app.status)}
             />
           ))
         ) : (

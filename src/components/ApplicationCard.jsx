@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Building2, Briefcase, Calendar, DollarSign, ExternalLink, Trash2, Edit3, ChevronDown } from 'lucide-react';
+import { Building2, Briefcase, Calendar, DollarSign, ExternalLink, Trash2, Edit3, ChevronDown, Globe, MapPin, Laptop } from 'lucide-react';
 
 const ApplicationCard = ({ application, onEdit, onDelete, onStatusUpdate }) => {
     const getStatusClass = (status) => {
@@ -31,7 +31,7 @@ const ApplicationCard = ({ application, onEdit, onDelete, onStatusUpdate }) => {
                     </div>
                     <div>
                         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{application.company}</h3>
-                        <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 <Briefcase size={14} /> {application.role}
                             </span>
@@ -41,6 +41,21 @@ const ApplicationCard = ({ application, onEdit, onDelete, onStatusUpdate }) => {
                             {application.salary && (
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                     <DollarSign size={14} /> {application.salary}
+                                </span>
+                            )}
+                            {application.platform && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Globe size={14} /> {application.platform}
+                                </span>
+                            )}
+                            {application.location && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <MapPin size={14} /> {application.location}
+                                </span>
+                            )}
+                            {application.workMode && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Laptop size={14} /> {application.workMode}
                                 </span>
                             )}
                         </div>
