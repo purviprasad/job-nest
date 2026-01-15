@@ -116,163 +116,194 @@ const ApplicationForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             zIndex: 1000,
             padding: '1rem'
         }}>
-            <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '600px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
-                <button
-                    onClick={onClose}
-                    style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', color: 'var(--text-muted)' }}
-                >
-                    <X size={24} />
-                </button>
+            <div className="glass-card animate-fade-in" style={{
+                width: '100%',
+                maxWidth: '600px',
+                position: 'relative',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 0, // Remove default padding to handle inner sections
+                overflow: 'hidden' // proper containment
+            }}>
+                {/* Fixed Header */}
+                <div style={{
+                    padding: '1.5rem',
+                    borderBottom: '1px solid var(--card-border)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.02)'
+                }}>
+                    <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
+                        {initialData ? 'Edit Application' : 'Add New Application'}
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        style={{ background: 'transparent', color: 'var(--text-muted)', padding: 0, display: 'flex' }}
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
 
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                    {initialData ? 'Edit Application' : 'Add New Application'}
-                </h2>
-
-                <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gap: '1rem' }}>
-
-                        {/* Platform Selection */}
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Platform</label>
-                            <select
-                                name="platform" value={formData.platform} onChange={handleChange}
-                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                            >
-                                <option value="">Select Platform</option>
-                                {platforms.map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                        </div>
-
-                        {/* Manual Platform Input */}
-                        {formData.platform === 'Other' && (
-                            <div className="animate-fade-in">
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Specify Platform</label>
-                                <input
-                                    type="text" name="otherPlatform" value={formData.otherPlatform} onChange={handleChange} required
+                {/* Scrollable Body */}
+                <div style={{
+                    overflowY: 'auto',
+                    padding: '1.5rem',
+                    flex: 1
+                }}>
+                    <form id="application-form" onSubmit={handleSubmit}>
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                            {/* Platform Selection */}
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Platform</label>
+                                <select
+                                    name="platform" value={formData.platform} onChange={handleChange}
                                     style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                    placeholder="e.g. Company Website, Referral"
-                                />
+                                >
+                                    <option value="">Select Platform</option>
+                                    {platforms.map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
                             </div>
-                        )}
 
-                        {/* Job Link & Auto-fill */}
-                        {formData.platform && (
-                            <div className="animate-fade-in">
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Job Link</label>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {/* Manual Platform Input */}
+                            {formData.platform === 'Other' && (
+                                <div className="animate-fade-in">
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Specify Platform</label>
                                     <input
-                                        type="url" name="link" value={formData.link} onChange={handleChange}
-                                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                        placeholder="Paste job link here..."
+                                        type="text" name="otherPlatform" value={formData.otherPlatform} onChange={handleChange} required
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                        placeholder="e.g. Company Website, Referral"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={handleAutoFill}
-                                        disabled={!formData.link || isExtracting}
-                                        style={{
-                                            padding: '0 1rem',
-                                            background: 'var(--accent-primary)',
-                                            color: 'white',
-                                            borderRadius: '8px',
-                                            fontWeight: '600',
-                                            opacity: (!formData.link || isExtracting) ? 0.5 : 1
-                                        }}
-                                    >
-                                        {isExtracting ? '...' : 'Auto-fill'}
-                                    </button>
                                 </div>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                                    Paste link and click Auto-fill to fetch details automatically.
-                                </p>
-                            </div>
-                        )}
+                            )}
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Company Name</label>
-                                <input
-                                    type="text" name="company" value={formData.company} onChange={handleChange} required
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                    placeholder="e.g. Google"
-                                />
-                            </div>
+                            {/* Job Link & Auto-fill */}
+                            {formData.platform && (
+                                <div className="animate-fade-in">
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Job Link</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input
+                                            type="url" name="link" value={formData.link} onChange={handleChange}
+                                            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                            placeholder="Paste job link here..."
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAutoFill}
+                                            disabled={!formData.link || isExtracting}
+                                            style={{
+                                                padding: '0 1rem',
+                                                background: 'var(--accent-primary)',
+                                                color: 'white',
+                                                borderRadius: '8px',
+                                                fontWeight: '600',
+                                                opacity: (!formData.link || isExtracting) ? 0.5 : 1
+                                            }}
+                                        >
+                                            {isExtracting ? '...' : 'Auto-fill'}
+                                        </button>
+                                    </div>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                        Paste link and click Auto-fill to fetch details automatically.
+                                    </p>
+                                </div>
+                            )}
 
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Role</label>
-                                <input
-                                    type="text" name="role" value={formData.role} onChange={handleChange} required
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                    placeholder="e.g. Frontend Engineer"
-                                />
-                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Company Name</label>
+                                    <input
+                                        type="text" name="company" value={formData.company} onChange={handleChange} required
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                        placeholder="e.g. Google"
+                                    />
+                                </div>
 
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Status</label>
-                                <select
-                                    name="status" value={formData.status} onChange={handleChange}
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                >
-                                    <option value="Applied">Applied</option>
-                                    <option value="Interview">Interview</option>
-                                    <option value="Offer">Offer</option>
-                                    <option value="Rejected">Rejected</option>
-                                </select>
-                            </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Role</label>
+                                    <input
+                                        type="text" name="role" value={formData.role} onChange={handleChange} required
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                        placeholder="e.g. Frontend Engineer"
+                                    />
+                                </div>
 
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Date Applied</label>
-                                <input
-                                    type="date" name="date" value={formData.date} onChange={handleChange} required
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                />
-                            </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Status</label>
+                                    <select
+                                        name="status" value={formData.status} onChange={handleChange}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                    >
+                                        <option value="Applied">Applied</option>
+                                        <option value="Interview">Interview</option>
+                                        <option value="Offer">Offer</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </div>
 
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Salary (Optional)</label>
-                                <input
-                                    type="text" name="salary" value={formData.salary} onChange={handleChange}
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                    placeholder="e.g. $120k"
-                                />
-                            </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Date Applied</label>
+                                    <input
+                                        type="date" name="date" value={formData.date} onChange={handleChange} required
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                    />
+                                </div>
 
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Location (Optional)</label>
-                                <input
-                                    type="text" name="location" value={formData.location} onChange={handleChange}
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                    placeholder="e.g. New York, NY"
-                                />
-                            </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Salary (Optional)</label>
+                                    <input
+                                        type="text" name="salary" value={formData.salary} onChange={handleChange}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                        placeholder="e.g. $120k"
+                                    />
+                                </div>
 
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Work Mode</label>
-                                <select
-                                    name="workMode" value={formData.workMode} onChange={handleChange}
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
-                                >
-                                    <option value="On-site">On-site</option>
-                                    <option value="Remote">Remote</option>
-                                    <option value="Hybrid">Hybrid</option>
-                                </select>
-                            </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Location (Optional)</label>
+                                    <input
+                                        type="text" name="location" value={formData.location} onChange={handleChange}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                        placeholder="e.g. New York, NY"
+                                    />
+                                </div>
 
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Notes</label>
-                                <textarea
-                                    name="notes" value={formData.notes} onChange={handleChange} rows="3"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white', resize: 'none' }}
-                                    placeholder="Any special notes or follow-ups..."
-                                />
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Work Mode</label>
+                                    <select
+                                        name="workMode" value={formData.workMode} onChange={handleChange}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white' }}
+                                    >
+                                        <option value="On-site">On-site</option>
+                                        <option value="Remote">Remote</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Notes</label>
+                                    <textarea
+                                        name="notes" value={formData.notes} onChange={handleChange} rows="3"
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.75rem', color: 'white', resize: 'none' }}
+                                        placeholder="Any special notes or follow-ups..."
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
+                </div>
 
+                {/* Fixed Footer */}
+                <div style={{
+                    padding: '1.5rem',
+                    borderTop: '1px solid var(--card-border)',
+                    background: 'rgba(255,255,255,0.02)'
+                }}>
                     <button
                         type="submit"
+                        form="application-form"
                         style={{
                             width: '100%',
-                            marginTop: '1.5rem',
                             background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                             color: 'white',
                             padding: '1rem',
@@ -283,7 +314,7 @@ const ApplicationForm = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                     >
                         {initialData ? 'Save Changes' : 'Add Application'}
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     );
